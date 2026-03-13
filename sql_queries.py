@@ -143,7 +143,7 @@ CREATE TABLE user_activity(
     activity_id INT IDENTITY(0,1),
     user_id VARCHAR(50) NOT NULL,
     song_id VARCHAR(100),
-    action VARCHAR(20),
+    action VARCHAR(35),
     ts TIMESTAMP,
     PRIMARY KEY (activity_id)
 )
