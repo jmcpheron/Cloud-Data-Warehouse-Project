@@ -14,6 +14,8 @@ song_table_drop = "DROP TABLE IF EXISTS songs;"
 artist_table_drop = "DROP TABLE IF EXISTS artists;"
 time_table_drop = "DROP TABLE IF EXISTS time;"
 
+# TODO: add DROP for user_activity table
+
 LOG_DATA = config.get("S3", "LOG_DATA")
 LOG_JSONPATH = config.get("S3", "LOG_JSONPATH")
 SONG_DATA = config.get("S3", "SONG_DATA")
@@ -136,6 +138,20 @@ SORTKEY(start_time)
 """
 
 
+user_activity_table_create = """
+CREATE TABLE user_activity(
+    activity_id INT IDENTITY(0,1),
+    user_id VARCHAR(50) NOT NULL,
+    song_id VARCHAR(100),
+    action VARCHAR(20),
+    ts TIMESTAMP,
+    PRIMARY KEY (activity_id)
+)
+DISTSTYLE AUTO
+SORTKEY(ts)
+"""
+
+
 # STAGING TABLES
 
 staging_events_copy = (
@@ -230,6 +246,19 @@ FROM songplays
 """
 
 
+user_activity_table_insert = """
+INSERT INTO user_activity (user_id, song_id, action, ts)
+SELECT
+    e.user_id,
+    s.song_id,
+    e.page,
+    e.ts
+FROM staging_events e
+LEFT JOIN staging_songs s ON (e.song_title = s.title AND e.artist_name = s.artist_name)
+WHERE e.user_id IS NOT NULL
+"""
+
+
 # QUERY LISTS
 
 create_table_queries = [
@@ -240,6 +269,7 @@ create_table_queries = [
     song_table_create,
     artist_table_create,
     songplay_table_create,
+    user_activity_table_create,
 ]
 drop_table_queries = [
     staging_events_table_drop,
@@ -257,4 +287,5 @@ insert_table_queries = [
     song_table_insert,
     artist_table_insert,
     time_table_insert,
+    user_activity_table_insert,
 ]
